@@ -44,6 +44,7 @@ El sistema se compone de los siguientes elementos:
 
 ### Esquema general
 
+```text
 [Sensor / Data Source]
         |
         v
