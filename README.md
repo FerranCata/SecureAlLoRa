@@ -65,5 +65,72 @@ El sistema se compone de los siguientes elementos:
         |
         v
    [Broker MQTT]
+```
 
-   
+## Modos / escenarios evaluados
+
+El proyecto permite comparar distintos niveles de seguridad:
+
+**Sin seguridad**
+- transmisión base del payload
+**AES**
+- cifrado del contenido del mensaje para confidencialidad
+**ECC +AES**
+- autenticidad e integridad del mensaje
+- cifrado del contenido del mensaje para confidencialidad
+**Extensión segura completa**
+- firma digital
+- cifrado AES
+- clave de sesión derivada con ECDH
+- campos anti-replay
+
+## Tecnologías utilizadas
+**Hardware**
+- LilyGO T3S3 LoRa / ESP32 + SX1276/SX1278
+- Segundo dispositivo LilyGO usado como gateway
+- Ordenador portátil para backend
+**Software**
+- MicroPython
+- AlLoRa
+- Python 3
+- pyserial
+- pycryptodome
+- paho-mqtt
+
+## Estructura del proyecto 
+
+## Flujo general del sistema
+1. El nodo IoT genera los datos.
+2. Se construye un mensaje estructurado.
+        El mensaje puede:
+        - enviarse en claro
+        - cifrarse con AES
+        - firmarse con ECC + cifrarse con AES
+        - incluir material ECDH 
+3. El nodo transmite el contenido mediante LoRa usando AlLoRa.
+4. El gateway recibe el archivo/paquete y lo reenvía por puerto serie.
+5. El backend:
+        - recibe el paquete
+        - descifra si procede
+        - reconstruye el contenido
+        - verifica la firma
+        - valida el dispositivo
+        - publica el dato por MQTT TLS
+
+## Formato general del mensaje seguro
+
+**Ejemplo conceptual:**
+```json
+{
+  "device_id": "....",
+  "msg_type": 1,
+  "timestamp": 1712345678,
+  "counter": 10,
+  "ecdh_pub": "04....",
+  "data": {
+    "temperature": 23.5,
+    "humidity": 48.1
+  },
+  "signature": "...."
+}
+```
