@@ -89,6 +89,7 @@ El proyecto permite comparar distintos niveles de seguridad:
 - LilyGO T3S3 LoRa / ESP32 + SX1276/SX1278
 - Segundo dispositivo LilyGO usado como gateway
 - Ordenador portátil para backend
+  
 **Software**
 - MicroPython
 - AlLoRa
