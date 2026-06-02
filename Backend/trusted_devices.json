@@ -1,0 +1,18 @@
+{
+  "devices": [
+    {
+      "device_id": "565d9ddbc93137be4a1148cc944aaad91212b723c02cb1858b0614c9eecf6a66",
+      "source_mac": "4a300708",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+aAlWsEGHwnmaSkk7YvJz9ZswGim\nqegmxMq/oaTXB/zZcBcYxyRAzcmv6NvmcJnBkmfatFxTBvX7gBREbQAubg==\n-----END PUBLIC KEY-----",
+      "name": "prueba2",
+      "active": true
+    },
+    {
+      "device_id": "31d89352f39f0eb989b11c0e5065246dc393d4218147220016d0aed93d14ef91",
+      "source_mac": "12345678",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEepJqGfvceqPi5sFHbDuPCBnh18/c\nKQTBraos5zKZ57j8iSkDEWV5CkCtq2zoPiB4YBFHMVDhGnQq1G5o2qrfmA==\n-----END PUBLIC KEY-----",
+      "name": "prueba3",
+      "active": true
+    }
+  ]
+}
