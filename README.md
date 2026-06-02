@@ -1,137 +1,118 @@
-# TFG: Comunicación IoT segura sobre AlLoRa/LoRa con MicroPython
 
-## Descripción
+# Sistema IoT LoRa Raw con seguridad AES, ECC, ECDH y MQTT TLS
 
-Este proyecto desarrolla e integra una capa de seguridad sobre un sistema de comunicación IoT basado en **AlLoRa/LoRa**, ejecutado en dispositivos embebidos con **MicroPython** y conectado a un **backend en Python**.
+Este repositorio contiene el código desarrollado para un TFG centrado en la implementación y análisis de una arquitectura IoT segura basada en LoRa Raw. El sistema permite comparar distintos modos de comunicación, desde una transmisión sin seguridad hasta una versión con cifrado AES, firma ECC, derivación de clave mediante ECDH, control anti-replay, gestión de dispositivos confiables y publicación mediante MQTT sobre TLS.
 
-El objetivo principal del trabajo es estudiar el coste real de añadir mecanismos de seguridad a una comunicación LoRa de bajo consumo, comparando tres modos de funcionamiento:
+El objetivo principal del proyecto no es sustituir soluciones estandarizadas como LoRaWAN, sino construir una prueba de concepto controlada que permita estudiar cómo afectan distintos mecanismos de seguridad al tamaño del payload, al procesamiento del mensaje y a la comunicación entre nodos embebidos y backend.
 
-- **Sin seguridad (SS)**
-- **AES**
-- **ECC + AES**
+## Arquitectura general
 
-El sistema implementado permite transmitir datos de sensores desde un nodo **Source**, recibirlos en el lado de consulta (**Requester/Gateway**) y procesarlos en un backend capaz de validar, descifrar y publicar la información mediante **MQTT TLS**.
-
-## Contexto
-
-AlLoRa es una capa avanzada sobre LoRa orientada a la transferencia de contenido, con una arquitectura modular basada en nodos **Source**, **Requester** y **Gateway**. En una configuración básica, el Source genera los datos y el Requester los solicita. Cuando se trabaja con múltiples nodos Source, el papel de consulta pasa a ser el de un Gateway.
-
-Sobre esta base, este TFG añade una capa de seguridad aplicada al contenido útil de los mensajes, con el fin de evaluar el impacto real en tamaño, fragmentación, validación y coste de transmisión.
-
-## Objetivos
-
-### Objetivo general
-
-Diseñar, implementar y evaluar un sistema de comunicación IoT seguro sobre AlLoRa/LoRa en dispositivos con MicroPython.
-
-### Objetivos específicos
-
-- Implementar tres modos de transmisión: **SS**, **AES** y **ECC+AES**.
-- Diseñar el formato de mensaje seguro entre nodo y backend.
-- Incorporar mecanismos de **confidencialidad**, **integridad**, **autenticidad** y **protección anti-replay**.
-- Validar experimentalmente el funcionamiento del sistema.
-- Comparar el coste técnico de cada esquema de seguridad.
-- Estudiar la viabilidad del sistema en entornos IoT con recursos limitados.
-
-## Arquitectura del sistema
-
-El sistema se compone de los siguientes elementos:
-
-- **Nodo Source**: dispositivo embebido que genera la telemetría y la transmite mediante AlLoRa.
-- **Nodo de consulta**: puede actuar como **Requester** si trabaja con un único Source, o como **Gateway** si gestiona varios nodos.
-- **Backend en Python**: recibe los mensajes, los descifra, verifica su validez y publica la información procesada.
-- **Broker MQTT TLS**: canal de publicación segura de los datos.
-
-### Esquema general
+La arquitectura se organiza en cinco bloques principales:
 
 ```text
-[Sensor / Data Source]
-        |
-        v
- [Source Node]
-   MicroPython
-   AlLoRa + LoRa
-        |
-        v
-[Requester / Gateway]
-        |
-        v
- [Backend Python]
-   - recepción
-   - descifrado
-   - verificación
-   - anti-replay
-   - publicación MQTT TLS
-        |
-        v
-   [Broker MQTT]
+Source  ->  Gateway  ->  Backend  ->  MQTT TLS
+                         ^
+                         |
+                      GUI Admin
 ```
 
-## Modos / escenarios evaluados
+- `Source`: nodo emisor basado en ESP32 LoRa. Genera los datos, aplica el modo de seguridad correspondiente y transmite el payload mediante LoRa Raw usando AlLoRa.
+- `Gateway`: nodo intermedio basado en ESP32 LoRa. Recibe mensajes mediante LoRa, reconstruye el contenido con AlLoRa y lo reenvía al Backend por puerto serie.
+- `Backend`: aplicación Python que recibe los mensajes, descifra, verifica firmas, aplica anti-replay, valida dispositivos confiables y publica datos válidos.
+- `MQTT_TLS`: configuración del broker Mosquitto con TLS y certificados.
+- `GUI Admin`: interfaz gráfica para administrar dispositivos confiables mediante MQTT TLS.
 
-El proyecto permite comparar distintos niveles de seguridad:
+## Estructura del repositorio
 
-**Sin seguridad**
-- transmisión base del payload
-**AES**
-- cifrado del contenido del mensaje para confidencialidad
-**ECC +AES**
-- autenticidad e integridad del mensaje
-- cifrado del contenido del mensaje para confidencialidad
-**Extensión segura completa**
-- firma digital
-- cifrado AES
-- clave de sesión derivada con ECDH
-- campos anti-replay
-
-## Tecnologías utilizadas
-**Hardware**
-- LilyGO T3S3 LoRa / ESP32 + SX1276/SX1278
-- Segundo dispositivo LilyGO usado como gateway
-- Ordenador portátil para backend
-  
-**Software**
-- MicroPython
-- AlLoRa
-- Python 3
-- pyserial
-- pycryptodome
-- paho-mqtt
-
-## Estructura del proyecto 
-
-## Flujo general del sistema
-1. El nodo IoT genera los datos.
-2. Se construye un mensaje estructurado.
-        El mensaje puede:
-        - enviarse en claro
-        - cifrarse con AES
-        - firmarse con ECC + cifrarse con AES
-        - incluir material ECDH 
-3. El nodo transmite el contenido mediante LoRa usando AlLoRa.
-4. El gateway recibe el archivo/paquete y lo reenvía por puerto serie.
-5. El backend:
-        - recibe el paquete
-        - descifra si procede
-        - reconstruye el contenido
-        - verifica la firma
-        - valida el dispositivo
-        - publica el dato por MQTT TLS
-
-## Formato general del mensaje seguro
-
-**Ejemplo conceptual:**
-```json
-{
-  "device_id": "....",
-  "msg_type": 1,
-  "timestamp": 1712345678,
-  "counter": 10,
-  "ecdh_pub": "04....",
-  "data": {
-    "temperature": 23.5,
-    "humidity": 48.1
-  },
-  "signature": "...."
-}
+```text
+.
+├── Backend
+│   ├── BackendAES.py
+│   ├── BackendECC.py
+│   ├── backend_ecdh_private.pem
+│   ├── BackendECDH.py
+│   ├── BackendSS.py
+│   ├── gen_backend_ecdh.py
+│   ├── make_public_pem.py
+│   ├── trusted_devices_admin_GUI.py
+│   └── trusted_devices.json
+├── Firmware
+│   └── firmware.bin
+├── Gateway
+│   ├── 1NodoMain.py
+│   ├── LoRa.json
+│   ├── MultiNodoMain.py
+│   └── Nodes.json
+├── MQTT_TLS
+│   ├── certs
+│   │   ├── admin_client.crt
+│   │   ├── admin_client.csr
+│   │   ├── admin_client.key
+│   │   ├── ca.crt
+│   │   ├── ca.key
+│   │   ├── ca.srl
+│   │   ├── client.crt
+│   │   ├── client.csr
+│   │   ├── client.key
+│   │   ├── server.crt
+│   │   ├── server.csr
+│   │   └── server.key
+│   └── mosquitto_tls.conf
+└── Source
+    ├── AESmain.py
+    ├── ECCmain.py
+    ├── ECDHmain.py
+    ├── ecdh_p256.py
+    ├── ecdsa_p256.py
+    ├── LoRa.json
+    └── SSmain.py
 ```
+
+## Orden cronológico de desarrollo
+
+El proyecto está organizado de forma progresiva. El orden lógico de evolución es el siguiente:
+
+1. Carga del firmware base en las placas ESP32 LoRa.
+2. Implementación de comunicación básica Source-Gateway-Backend sin seguridad.
+3. Incorporación del cifrado AES en el payload.
+4. Incorporación de firma ECC para autenticación e integridad.
+5. Gestión de dispositivos confiables en el Backend.
+6. Ampliación a múltiples nodos Source.
+7. Incorporación de ECDH para derivación de clave de sesión.
+8. Integración con MQTT sobre TLS.
+9. Desarrollo de GUI de administración por MQTT TLS.
+
+## Modos de funcionamiento
+
+| Modo | Source | Backend | Propósito |
+|---|---|---|---|
+| Sin seguridad | `Source/SSmain.py` | `Backend/BackendSS.py` | Comunicación base en claro |
+| AES | `Source/AESmain.py` | `Backend/BackendAES.py` | Confidencialidad del payload |
+| ECC + AES | `Source/ECCmain.py` | `Backend/BackendECC.py` | Confidencialidad, autenticación e integridad |
+| ECDH + ECC + AES | `Source/ECDHmain.py` | `Backend/BackendECDH.py` | Derivación de clave de sesión, autenticación, integridad y cifrado |
+
+## Requisitos generales
+
+En el Backend se requiere Python 3 y varias dependencias:
+
+```bash
+pip install pyserial pycryptodome paho-mqtt
+```
+
+Para el broker MQTT con TLS se utiliza Mosquitto:
+
+```bash
+sudo apt install mosquitto mosquitto-clients
+```
+
+En los nodos ESP32 LoRa se utiliza MicroPython y la librería AlLoRa.
+
+## Documentación por carpetas
+
+Cada carpeta principal incluye su propio `README.md`:
+
+- `Backend/README.md`: explicación de los backends y scripts auxiliares.
+- `Source/README.md`: explicación de los modos del nodo emisor.
+- `Gateway/README.md`: explicación del gateway de un nodo y multinodo.
+- `MQTT_TLS/README.md`: explicación de certificados y configuración Mosquitto.
+- `Firmware/README.md`: explicación del firmware base de las placas.
