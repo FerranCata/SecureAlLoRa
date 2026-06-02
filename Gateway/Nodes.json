@@ -1,0 +1,22 @@
+[
+  {
+    "name": "S1",
+    "mac_address": "4a300708",
+    "sleep_mesh": false,
+    "active": true,
+    "asking_frequency": 10,
+    "listening_time": 20,
+    "lock_on_file_receive": false,
+    "max_listen_time_when_locked": 60
+  },
+  {
+    "name": "S2",
+    "mac_address": "4a300709",
+    "sleep_mesh": false,
+    "active": true,
+    "asking_frequency": 10,
+    "listening_time": 20,
+    "lock_on_file_receive": false,
+    "max_listen_time_when_locked": 60
+  }
+]
